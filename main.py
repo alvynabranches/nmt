@@ -13,10 +13,10 @@ cuda.empty_cache()
 
 if create_json: create_json_dataset('data/en_de/train.en', 'data/en_de/train.de', 50)
 
-# spacy_input = spacy.load("en_core_web_lg")
-spacy_input = spacy.load("en_core_web_trf")
-# spacy_output = spacy.load("de_core_news_lg")
-spacy_output = spacy.load("de_dep_news_trf")
+spacy_input = spacy.load("en_core_web_sm")
+# spacy_input = spacy.load("en_core_web_trf")
+spacy_output = spacy.load("de_core_news_sm")
+# spacy_output = spacy.load("de_dep_news_trf")
 
 input_ = Field(tokenize=lambda text: [tok.text for tok in spacy_input.tokenizer(text)], lower=True, init_token="<start>", eos_token="<end>")
 output_ = Field(tokenize=lambda text: [tok.text for tok in spacy_output.tokenizer(text)], lower=True, init_token="<start>", eos_token="<end>")
