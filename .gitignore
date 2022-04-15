@@ -128,5 +128,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Data Folder
+# Data Directory
 data/
+
+# Model Directory
+models/
