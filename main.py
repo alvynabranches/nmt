@@ -19,7 +19,7 @@ from utils import translate_sentence, bleu, save_checkpoint, load_checkpoint, cr
 
 cuda.empty_cache()
 
-if create_json: create_json_dataset('train.en', 'train.de', 25000)
+if create_json: create_json_dataset('train.en', 'train.de')
 
 spacy_input = spacy.load("en_core_web_lg")
 spacy_output = spacy.load("de_core_news_lg")
@@ -33,8 +33,8 @@ output_ = Field(tokenize=tokenize_output, lower=True, init_token="<start>", eos_
 fields = {"English": ("eng", input_), "German": ("ger", output_)}
 train_data, test_data = TabularDataset.splits(path="", train="train_en_de.json", validation="val_en_de.json", test="test_en_de.json", format="json", fields=fields)
 
-input_.build_vocab(train_data, max_size=100000, min_freq=2)
-output_.build_vocab(train_data, max_size=100000, min_freq=2)
+input_.build_vocab(train_data, max_size=100_000, min_freq=2)
+output_.build_vocab(train_data, max_size=100_000, min_freq=2)
 
 # Model hyperparameters
 src_vocab_size = len(input_.vocab)
