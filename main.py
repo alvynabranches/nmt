@@ -19,7 +19,7 @@ from utils import translate_sentence, bleu, save_checkpoint, load_checkpoint, cr
 
 cuda.empty_cache()
 
-if create_json: create_json_dataset('train.en', 'train.de')
+if create_json: create_json_dataset('data/en_de/train.en', 'data/en_de/train.de')
 
 spacy_input = spacy.load("en_core_web_lg")
 spacy_output = spacy.load("de_core_news_lg")
