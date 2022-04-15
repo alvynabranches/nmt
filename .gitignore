@@ -133,3 +133,9 @@ data/
 
 # Model Directory
 models/
+
+# Tensorboard Directory
+runs/
+
+# JSON Files
+*_en_de.json
