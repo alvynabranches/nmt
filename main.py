@@ -9,35 +9,19 @@ from config import create_json, device, load_model, save_model, train_model, num
 from model import Transformer
 from utils import translate_sentence, bleu, save_checkpoint, load_checkpoint, create_json_dataset
 
-# To install spacy languages do:
-# !python -m spacy download en_core_web_sm
-# !python -m spacy download en_core_web_md
-# !python -m spacy download en_core_web_lg
-# !python -m spacy download en_core_web_trf
-# !python -m spacy download de_core_news_sm
-# !python -m spacy download de_core_news_md
-# !python -m spacy download de_core_news_lg
-# !python -m spacy download de_dep_news_trf
-# !python -m spacy download en_core_web_trf # Use this and restart the runtime
-# !python -m spacy download de_dep_news_trf # Use this and restart the runtime
-
 cuda.empty_cache()
 
-if create_json: create_json_dataset('data/en_de/train.en', 'data/en_de/train.de')
+if create_json: create_json_dataset('data/en_de/train.en', 'data/en_de/train.de', 50)
 
 # spacy_input = spacy.load("en_core_web_lg")
 spacy_input = spacy.load("en_core_web_trf")
 # spacy_output = spacy.load("de_core_news_lg")
 spacy_output = spacy.load("de_dep_news_trf")
 
-tokenize_input = lambda text: [tok.text for tok in spacy_input.tokenizer(text)]
-tokenize_output = lambda text: [tok.text for tok in spacy_output.tokenizer(text)]
+input_ = Field(tokenize=lambda text: [tok.text for tok in spacy_input.tokenizer(text)], lower=True, init_token="<start>", eos_token="<end>")
+output_ = Field(tokenize=lambda text: [tok.text for tok in spacy_output.tokenizer(text)], lower=True, init_token="<start>", eos_token="<end>")
 
-input_ = Field(tokenize=tokenize_input, lower=True, init_token="<start>", eos_token="<end>")
-output_ = Field(tokenize=tokenize_output, lower=True, init_token="<start>", eos_token="<end>")
-
-fields = {"English": ("eng", input_), "German": ("ger", output_)}
-train_data, test_data = TabularDataset.splits(path="", train="train_en_de.json", validation="val_en_de.json", test="test_en_de.json", format="json", fields=fields)
+train_data, val_data, test_data = TabularDataset.splits(path="", train="train_en_de.json", validation="val_en_de.json", test="test_en_de.json", format="json", fields={"English": ("eng", input_), "German": ("ger", output_)})
 
 input_.build_vocab(train_data, max_size=100_000, min_freq=2)
 output_.build_vocab(train_data, max_size=100_000, min_freq=2)
