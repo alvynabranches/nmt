@@ -1,4 +1,5 @@
 import pandas as pd, spacy, torch, torch.nn as nn, torch.optim as optim, torch.cuda as cuda
+from tqdm import tqdm
 from torchtext.legacy.data import Field, BucketIterator, TabularDataset
 from torch.utils.tensorboard import SummaryWriter
 from time import perf_counter
@@ -11,18 +12,22 @@ from utils import translate_sentence, bleu, save_checkpoint, load_checkpoint, cr
 # !python -m spacy download en_core_web_sm
 # !python -m spacy download en_core_web_md
 # !python -m spacy download en_core_web_lg
+# !python -m spacy download en_core_web_trf
 # !python -m spacy download de_core_news_sm
 # !python -m spacy download de_core_news_md
 # !python -m spacy download de_core_news_lg
-# !spacy download en_core_web_lg # Use this and restart the runtime
-# !spacy download de_core_news_lg # Use this and restart the runtime
+# !python -m spacy download de_dep_news_trf
+# !python -m spacy download en_core_web_trf # Use this and restart the runtime
+# !python -m spacy download de_dep_news_trf # Use this and restart the runtime
 
 cuda.empty_cache()
 
 if create_json: create_json_dataset('data/en_de/train.en', 'data/en_de/train.de')
 
-spacy_input = spacy.load("en_core_web_lg")
-spacy_output = spacy.load("de_core_news_lg")
+# spacy_input = spacy.load("en_core_web_lg")
+spacy_input = spacy.load("en_core_web_trf")
+# spacy_output = spacy.load("de_core_news_lg")
+spacy_output = spacy.load("de_dep_news_trf")
 
 tokenize_input = lambda text: [tok.text for tok in spacy_input.tokenizer(text)]
 tokenize_output = lambda text: [tok.text for tok in spacy_output.tokenizer(text)]
@@ -49,7 +54,7 @@ forward_expansion = 4
 src_pad_idx = input_.vocab.stoi["<pad>"]
 
 # File name for pth files.
-filename = f"final_{num_epochs+start}.pth"
+filename = f"models/en_de_{num_epochs+start}.pth"
 
 # Tensorboard to get nice loss plot
 writer = SummaryWriter("runs/loss_plot")
@@ -75,7 +80,7 @@ sentence = sentences[0]
 
 if train_model:
     s = perf_counter()
-    for epoch in range(start, start+num_epochs):
+    for epoch in tqdm(range(start, start+num_epochs)):
         print(f"[Epoch {epoch+1} / {start+num_epochs}]")
         
         model.eval()
