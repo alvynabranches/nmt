@@ -1,9 +1,10 @@
-import pandas as pd, spacy, torch, torch.nn as nn, torch.optim as optim, torch.cuda as cuda
+import spacy, torch, torch.nn as nn, torch.optim as optim, torch.cuda as cuda
 from tqdm import tqdm
 from torchtext.legacy.data import Field, BucketIterator, TabularDataset
 from torch.utils.tensorboard import SummaryWriter
 from time import perf_counter
-from spacy.lang.en.examples import sentences
+from spacy.lang.en.examples import sentences as en_sentences
+from spacy.lang.de.examples import sentences as de_sentences
 from config import create_json, device, load_model, save_model, train_model, num_epochs, start, learning_rate, batch_size
 from model import Transformer
 from utils import translate_sentence, bleu, save_checkpoint, load_checkpoint, create_json_dataset
@@ -76,7 +77,7 @@ criterion = nn.CrossEntropyLoss(ignore_index=pad_idx)
 if load_model:
     load_checkpoint(torch.load(filename), model, optimizer)
 
-sentence = sentences[0]
+sentence = en_sentences[0]
 
 if train_model:
     s = perf_counter()
