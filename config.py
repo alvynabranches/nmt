@@ -13,7 +13,7 @@ save_model = False
 train_model = True
 
 # Training hyperparameters
-num_epochs = 1
+num_epochs = 10
 start = 0
 learning_rate = 3e-4
 batch_size = 32

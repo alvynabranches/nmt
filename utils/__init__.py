@@ -66,13 +66,13 @@ def load_checkpoint(checkpoint, model, optimizer):
     model.load_state_dict(checkpoint["state_dict"])
     optimizer.load_state_dict(checkpoint["optimizer"])
     
-def create_json_dataset(english_file:str, german_file:str, max_:int=None, encoding:str="utf8"):
+def create_json_dataset(english_file: str, german_file: str, max_: int=None, encoding: str="utf8"):
     english_txt = open(english_file, encoding=encoding).read().split("\n")
     german_txt = open(german_file, encoding=encoding).read().split("\n")
     
     df = pd.DataFrame(
         data={
-            'English': [line for line in english_txt[0:max_ ]] if max_ is not None else [line for line in english_txt[0:]], 
+            'English': [line for line in english_txt[0:max_]] if max_ is not None else [line for line in english_txt[0:]], 
             'German': [line for line in german_txt[0:max_]] if max_ is not None else [line for line in german_txt[0:]]
         }, 
         columns=['English', 'German']
