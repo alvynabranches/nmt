@@ -131,7 +131,7 @@ if train_model:
 if score_model:
     # running on entire test data takes a while
     s = perf_counter()
-    score = bleu(test_data[:100], model, input_, output_, device)
+    score = bleu(test_data[:], model, input_, output_, device)
     print(f"Bleu score {score * 100:.2f}")
     e = perf_counter()
     print(f"Scoring Time => {e-s:.5f} seconds")
