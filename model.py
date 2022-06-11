@@ -19,6 +19,7 @@ class Transformer(nn.Module):
         self.src_pad_idx = src_pad_idx
 
     def make_src_mask(self, src):
+        # src shape: (src_len, N)
         src_mask = src.transpose(0, 1) == self.src_pad_idx
 
         # (N, src_len)
@@ -29,7 +30,6 @@ class Transformer(nn.Module):
         trg_seq_length, N = trg.shape
 
         src_positions = torch.arange(0, src_seq_length).unsqueeze(1).expand(src_seq_length, N).to(self.device)
-
         trg_positions = torch.arange(0, trg_seq_length).unsqueeze(1).expand(trg_seq_length, N).to(self.device)
 
         embed_src = self.dropout(self.src_word_embedding(src) + self.src_position_embedding(src_positions))
@@ -44,5 +44,4 @@ class Transformer(nn.Module):
             src_key_padding_mask=src_padding_mask,
             tgt_mask=trg_mask,
         )
-        out = self.fc_out(out)
-        return out
+        return self.fc_out(out)

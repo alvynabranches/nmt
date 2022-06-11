@@ -8,9 +8,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # # To utilize only CPU even if GPU is available
 # device = torch.device("cpu")
 
-load_model = False
-save_model = False
+load_model = True
+save_model = True
 train_model = True
+score_model = True
 
 # Training hyperparameters
 num_epochs = 10
