@@ -8,7 +8,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # # To utilize only CPU even if GPU is available
 # device = torch.device("cpu")
 
-load_model = True
+load_model = False
 save_model = True
 train_model = True
 score_model = True

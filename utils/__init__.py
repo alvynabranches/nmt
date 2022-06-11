@@ -2,6 +2,7 @@ import pandas as pd, spacy, torch
 from torchtext.data.metrics import bleu_score
 from sklearn.model_selection import train_test_split
 
+
 def translate_sentence(model, sentence, input_, english, device, max_length=50, input_vocab="de_core_news_md"):
     # Load input tokenizer
     spacy_ger = spacy.load(input_vocab)
@@ -39,6 +40,7 @@ def translate_sentence(model, sentence, input_, english, device, max_length=50, 
     # remove start token
     return translated_sentence[1:]
 
+
 def bleu(data, model, input_, output_, device):
     targets = []
     outputs = []
@@ -66,14 +68,15 @@ def load_checkpoint(checkpoint, model, optimizer):
     model.load_state_dict(checkpoint["state_dict"])
     optimizer.load_state_dict(checkpoint["optimizer"])
     
+
 def create_json_dataset(english_file: str, german_file: str, max_: int=None, encoding: str="utf8"):
     english_txt = open(english_file, encoding=encoding).read().split("\n")
     german_txt = open(german_file, encoding=encoding).read().split("\n")
     
     df = pd.DataFrame(
         data={
-            'English': [line for line in english_txt[0:max_]] if max_ is not None else [line for line in english_txt[0:]], 
-            'German': [line for line in german_txt[0:max_]] if max_ is not None else [line for line in german_txt[0:]]
+            'English': [line for line in (english_txt[0:max_] if max_ is not None else english_txt)], 
+            'German': [line for line in (german_txt[0:max_] if max_ is not None else german_txt)]
         }, 
         columns=['English', 'German']
     )
