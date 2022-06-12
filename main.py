@@ -5,13 +5,13 @@ from torch.utils.tensorboard import SummaryWriter
 from time import perf_counter
 from spacy.lang.en.examples import sentences as en_sentences
 from spacy.lang.de.examples import sentences as de_sentences
-from config import create_json, device, load_model, save_model, score_model, train_model, num_epochs, start, learning_rate, batch_size
+from config import create_json, device, load_model, save_model, score_model, train_model, num_epochs, start, learning_rate, batch_size, filename
 from model import Transformer
 from utils import translate_sentence, bleu, save_checkpoint, load_checkpoint, create_json_dataset
 
 cuda.empty_cache()
-
-if create_json: create_json_dataset('data/en_de/train.en', 'data/en_de/train.de')
+n = 0
+if create_json: create_json_dataset('data/en_de/train.en', 'data/en_de/train.de', start=n*batch_size, end=(n+1)*batch_size*10)
 
 spacy_input = spacy.load("en_core_web_sm")
 # spacy_input = spacy.load("en_core_web_trf")
@@ -37,9 +37,6 @@ dropout = 0.10
 max_len = 100
 forward_expansion = 4
 src_pad_idx = input_.vocab.stoi["<pad>"]
-
-# File name for pth files.
-filename = f"models/en_de_{num_epochs+start}.pth"
 
 # Tensorboard to get nice loss plot
 writer = SummaryWriter("runs/loss_plot")
@@ -71,7 +68,7 @@ if train_model:
         model.train()
         losses = []
 
-        for batch_idx, batch in tqdm(enumerate(train_iterator)):
+        for batch_idx, batch in tqdm(enumerate(train_iterator), total=len(train_iterator)):
             # Get input and targets and get to cuda
             inp_data = batch.src.to(device)
             target = batch.trg.to(device)
@@ -118,12 +115,7 @@ if train_model:
 
         mean_loss = sum(losses) / len(losses)
         scheduler.step(mean_loss)
-        if save_model:
-            checkpoint = {
-                "state_dict": model.state_dict(),
-                "optimizer": optimizer.state_dict(),
-            }
-            save_checkpoint(checkpoint, filename=filename)
+        if save_model: save_checkpoint(model, optimizer, filename=filename.format(epoch))
 
     e = perf_counter()
     print(f"Training Time => {e-s:.5f} seconds")
