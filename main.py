@@ -10,7 +10,7 @@ from model import Transformer
 from utils import translate_sentence, bleu, save_checkpoint, load_checkpoint, create_json_dataset
 
 cuda.empty_cache()
-n = 0
+n = 1
 if create_json: create_json_dataset('data/en_de/train.en', 'data/en_de/train.de', start=n*batch_size, end=(n+1)*batch_size*10)
 
 spacy_input = spacy.load("en_core_web_sm")
@@ -56,7 +56,7 @@ pad_idx = output_.vocab.stoi["<pad>"]
 criterion = nn.CrossEntropyLoss(ignore_index=pad_idx)
 
 if load_model:
-    load_checkpoint(torch.load(filename), model, optimizer)
+    load_checkpoint(filename.format(start), model, optimizer)
 
 sentence = en_sentences[0]
 
