@@ -1,18 +1,24 @@
-import spacy, torch, torch.nn as nn, torch.optim as optim, torch.cuda as cuda
+import os, sys, spacy, torch, torch.nn as nn, torch.optim as optim, torch.cuda as cuda
 from tqdm import tqdm
 from torchtext.legacy.data import Field, BucketIterator, TabularDataset
+from torchtext.legacy.datasets import Multi30k
 from torch.utils.tensorboard import SummaryWriter
 from time import perf_counter
 from spacy.lang.en.examples import sentences as en_sentences
 from spacy.lang.de.examples import sentences as de_sentences
 from config import create_json, device, load_model, save_model, score_model, train_model, num_epochs, start, learning_rate, batch_size, filename
 from model import Transformer
-from utils import translate_sentence, bleu, save_checkpoint, load_checkpoint, create_json_dataset
+from utils import translate_sentence, bleu, save_checkpoint, load_checkpoint
+from utils.data import create_json_dataset
 
 cuda.empty_cache()
-n = 1
-if create_json: create_json_dataset('data/en_de/train.en', 'data/en_de/train.de', start=n*batch_size, end=(n+1)*batch_size*10)
 
+if create_json and not (os.path.isfile("./train_en_de.json") and os.path.isfile("./val_en_de.json") and os.path.isfile("./test_en_de.json")):
+    create_json_dataset(
+        ["data/en_de/train.en", "data/en_de/newstest2012.en", "data/en_de/newstest2013.en", "data/en_de/newstest2014.en", "data/en_de/newstest2015.en"], 
+        ["data/en_de/train.de", "data/en_de/newstest2012.de", "data/en_de/newstest2013.de", "data/en_de/newstest2014.de", "data/en_de/newstest2015.de"]
+    )
+sys.exit()
 spacy_input = spacy.load("en_core_web_sm")
 # spacy_input = spacy.load("en_core_web_trf")
 spacy_output = spacy.load("de_core_news_sm")
@@ -21,14 +27,18 @@ spacy_output = spacy.load("de_core_news_sm")
 input_ = Field(tokenize=lambda text: [tok.text for tok in spacy_input.tokenizer(text)], lower=True, init_token="<sos>", eos_token="<eos>")
 output_ = Field(tokenize=lambda text: [tok.text for tok in spacy_output.tokenizer(text)], lower=True, init_token="<sos>", eos_token="<eos>")
 
-train_data, val_data, test_data = TabularDataset.splits(path="", train="train_en_de.json", validation="val_en_de.json", test="test_en_de.json", format="json", fields={"English": ("src", input_), "German": ("trg", output_)})
+# train_data, val_data, test_data = TabularDataset.splits(path="", train="train_en_de.json", validation="val_en_de.json", test="test_en_de.json", format="json", fields={"English": ("src", input_), "German": ("trg", output_)})
+train_data, val_data, test_data = Multi30k.splits(exts=(".en", ".de"), fields=(input_, output_))
 
 input_.build_vocab(train_data, max_size=10_000, min_freq=2)
 output_.build_vocab(train_data, max_size=10_000, min_freq=2)
 
 # Model hyperparameters
 src_vocab_size = len(input_.vocab)
+print(src_vocab_size)
 trg_vocab_size = len(output_.vocab)
+print(trg_vocab_size)
+sys.exit()
 embedding_size = 4096
 num_heads = 8
 num_encoder_layers = 3
