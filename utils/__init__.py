@@ -58,9 +58,14 @@ def bleu(data, model, input_, output_, device):
     return bleu_score(outputs, targets)
 
 
-def save_checkpoint(state, filename="new_checkpoint.pth"):
+def save_checkpoint(model, optimizer, filename="new_checkpoint.pth"):
     print("=> Saving checkpoint")
-    torch.save(state, filename)
+    checkpoint = {
+        "state_dict": model.state_dict(),
+        "optimizer": optimizer.state_dict(),
+    }
+    torch.save(checkpoint, filename)
+    print("=>Saved checkpoint")
 
 
 def load_checkpoint(checkpoint, model, optimizer):
@@ -69,14 +74,14 @@ def load_checkpoint(checkpoint, model, optimizer):
     optimizer.load_state_dict(checkpoint["optimizer"])
     
 
-def create_json_dataset(english_file: str, german_file: str, max_: int=None, encoding: str="utf8"):
-    english_txt = open(english_file, encoding=encoding).read().split("\n")
-    german_txt = open(german_file, encoding=encoding).read().split("\n")
+def create_json_dataset(english_file: str, german_file: str, start: int=0, end: int=None, english_encoding: str="utf8", german_encoding: str="utf8"):
+    english_txt = open(english_file, encoding=english_encoding).read().split("\n")
+    german_txt = open(german_file, encoding=german_encoding).read().split("\n")
     
     df = pd.DataFrame(
         data={
-            'English': [line for line in (english_txt[0:max_] if max_ is not None else english_txt)], 
-            'German': [line for line in (german_txt[0:max_] if max_ is not None else german_txt)]
+            'English': [line for line in (english_txt[0:end] if end is not None else english_txt)], 
+            'German': [line for line in (german_txt[0:end] if end is not None else german_txt)]
         }, 
         columns=['English', 'German']
     )
@@ -87,3 +92,4 @@ def create_json_dataset(english_file: str, german_file: str, max_: int=None, enc
     train.to_json("train_en_de.json", orient="records", lines=True)
     test.to_json("test_en_de.json", orient="records", lines=True)
     val.to_json("val_en_de.json", orient="records", lines=True)
+    del english_txt, german_txt, df, train, test, val
