@@ -65,10 +65,10 @@ def save_checkpoint(model, optimizer, filename="new_checkpoint.pth"):
         "optimizer": optimizer.state_dict(),
     }
     torch.save(checkpoint, filename)
-    print("=>Saved checkpoint")
+    print("=> Saved checkpoint")
 
 
-def load_checkpoint(filename, model, optimizer):
+def load_checkpoint(filename, model: torch.nn.Module, optimizer: torch.optim.Optimizer):
     print("=> Loading checkpoint")
     checkpoint = torch.load(filename)
     model.load_state_dict(checkpoint["state_dict"])
