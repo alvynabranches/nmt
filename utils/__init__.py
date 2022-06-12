@@ -46,8 +46,8 @@ def bleu(data, model, input_, output_, device):
     outputs = []
 
     for example in data:
-        src = vars(example)["eng"]
-        trg = vars(example)["ger"]
+        src = vars(example)["src"]
+        trg = vars(example)["tgt"]
 
         prediction = translate_sentence(model, src, input_, output_, device)
         prediction = prediction[:-1]  # remove <eos> token
@@ -68,8 +68,9 @@ def save_checkpoint(model, optimizer, filename="new_checkpoint.pth"):
     print("=>Saved checkpoint")
 
 
-def load_checkpoint(checkpoint, model, optimizer):
+def load_checkpoint(filename, model, optimizer):
     print("=> Loading checkpoint")
+    checkpoint = torch.load(filename)
     model.load_state_dict(checkpoint["state_dict"])
     optimizer.load_state_dict(checkpoint["optimizer"])
     
