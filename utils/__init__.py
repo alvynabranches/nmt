@@ -1,6 +1,5 @@
-import pandas as pd, spacy, torch
+import spacy, torch
 from torchtext.data.metrics import bleu_score
-from sklearn.model_selection import train_test_split
 
 
 def translate_sentence(model, sentence, input_, english, device, max_length=50, input_vocab="de_core_news_md"):
@@ -47,7 +46,7 @@ def bleu(data, model, input_, output_, device):
 
     for example in data:
         src = vars(example)["src"]
-        trg = vars(example)["tgt"]
+        trg = vars(example)["trg"]
 
         prediction = translate_sentence(model, src, input_, output_, device)
         prediction = prediction[:-1]  # remove <eos> token
@@ -74,23 +73,3 @@ def load_checkpoint(filename, model: torch.nn.Module, optimizer: torch.optim.Opt
     model.load_state_dict(checkpoint["state_dict"])
     optimizer.load_state_dict(checkpoint["optimizer"])
     
-
-def create_json_dataset(english_file: str, german_file: str, start: int=0, end: int=None, english_encoding: str="utf8", german_encoding: str="utf8"):
-    english_txt = open(english_file, encoding=english_encoding).read().split("\n")
-    german_txt = open(german_file, encoding=german_encoding).read().split("\n")
-    
-    df = pd.DataFrame(
-        data={
-            'English': [line for line in (english_txt[0:end] if end is not None else english_txt)], 
-            'German': [line for line in (german_txt[0:end] if end is not None else german_txt)]
-        }, 
-        columns=['English', 'German']
-    )
-    
-    train, test = train_test_split(df, test_size=0.2)
-    test, val = train_test_split(test, test_size=0.5)
-    
-    train.to_json("train_en_de.json", orient="records", lines=True)
-    test.to_json("test_en_de.json", orient="records", lines=True)
-    val.to_json("val_en_de.json", orient="records", lines=True)
-    del english_txt, german_txt, df, train, test, val
