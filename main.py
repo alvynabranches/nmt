@@ -30,10 +30,20 @@ spacy_output = spacy.load("de_core_news_sm")
 # spacy_input = spacy.load("en_core_web_trf")
 # spacy_output = spacy.load("de_dep_news_trf")
 
-input_ = Field(tokenize=lambda text: [tok.text for tok in spacy_input.tokenizer(text)], lower=True, init_token="<sos>", eos_token="<eos>")
-output_ = Field(tokenize=lambda text: [tok.text for tok in spacy_output.tokenizer(text)], lower=True, init_token="<sos>", eos_token="<eos>")
-pkl.dump(input_, open("input.pkl", "wb"))
-pkl.dump(output_, open("output.pkl", "wb"))
+def get_input(text):
+    return [tok.text for tok in spacy_input.tokenizer(text)]
+
+def get_output(text):
+    return [tok.text for tok in spacy_output.tokenizer(text)]
+
+if load_model:
+    input_ = pkl.load(open("input.pkl", "rb"))
+    output_ = pkl.load(open("output.pkl", "rb"))
+else:
+    input_ = Field(tokenize=get_input, lower=True, init_token="<sos>", eos_token="<eos>")
+    output_ = Field(tokenize=get_output, lower=True, init_token="<sos>", eos_token="<eos>")
+    pkl.dump(input_, open("input.pkl", "wb"))
+    pkl.dump(output_, open("output.pkl", "wb"))
 
 train_data, val_data, test_data = TabularDataset.splits(path="", train="train_en_de.json", validation="val_en_de.json", test="test_en_de.json", format="json", fields={"English": ("src", input_), "German": ("trg", output_)})
 # train_data, test_data = TabularDataset.splits(path="", train="val_en_de.json", test="test_en_de.json", format="json", fields={"English": ("src", input_), "German": ("trg", output_)})
