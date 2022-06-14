@@ -1,7 +1,8 @@
 import os, sys, spacy, torch, torch.nn as nn, torch.optim as optim, torch.cuda as cuda
+from pprint import pprint
 from tqdm import tqdm
 from torchtext.legacy.data import Field, BucketIterator, TabularDataset
-from torchtext.legacy.datasets import Multi30k
+# from torchtext.datasets import Multi30k, IWSLT2016, IWSLT2017
 from torch.utils.tensorboard import SummaryWriter
 from time import perf_counter
 from spacy.lang.en.examples import sentences as en_sentences
@@ -12,13 +13,18 @@ from utils import translate_sentence, bleu, save_checkpoint, load_checkpoint
 from utils.data import create_json_dataset
 
 cuda.empty_cache()
-
-if create_json and not (os.path.isfile("./train_en_de.json") and os.path.isfile("./val_en_de.json") and os.path.isfile("./test_en_de.json")):
+# 2012-2015
+FIRST = 2012
+LAST = 2012
+file_not_present = not (os.path.isfile("./train_en_de.json") and os.path.isfile("./val_en_de.json") and os.path.isfile("./test_en_de.json"))
+if create_json:
     create_json_dataset(
-        ["data/en_de/train.en", "data/en_de/newstest2012.en", "data/en_de/newstest2013.en", "data/en_de/newstest2014.en", "data/en_de/newstest2015.en"], 
-        ["data/en_de/train.de", "data/en_de/newstest2012.de", "data/en_de/newstest2013.de", "data/en_de/newstest2014.de", "data/en_de/newstest2015.de"]
+        # ["data/en_de/train.en", "data/en_de/newstest2012.en", "data/en_de/newstest2013.en", "data/en_de/newstest2014.en", "data/en_de/newstest2015.en"], 
+        # ["data/en_de/train.de", "data/en_de/newstest2012.de", "data/en_de/newstest2013.de", "data/en_de/newstest2014.de", "data/en_de/newstest2015.de"]
+        [f"data/en_de/newstest{i}.en" for i in range(FIRST, LAST+1)], 
+        [f"data/en_de/newstest{i}.de" for i in range(FIRST, LAST+1)]
     )
-sys.exit()
+
 spacy_input = spacy.load("en_core_web_sm")
 # spacy_input = spacy.load("en_core_web_trf")
 spacy_output = spacy.load("de_core_news_sm")
@@ -27,18 +33,22 @@ spacy_output = spacy.load("de_core_news_sm")
 input_ = Field(tokenize=lambda text: [tok.text for tok in spacy_input.tokenizer(text)], lower=True, init_token="<sos>", eos_token="<eos>")
 output_ = Field(tokenize=lambda text: [tok.text for tok in spacy_output.tokenizer(text)], lower=True, init_token="<sos>", eos_token="<eos>")
 
-# train_data, val_data, test_data = TabularDataset.splits(path="", train="train_en_de.json", validation="val_en_de.json", test="test_en_de.json", format="json", fields={"English": ("src", input_), "German": ("trg", output_)})
-train_data, val_data, test_data = Multi30k.splits(exts=(".en", ".de"), fields=(input_, output_))
+train_data, val_data, test_data = TabularDataset.splits(path="", train="train_en_de.json", validation="val_en_de.json", test="test_en_de.json", format="json", fields={"English": ("src", input_), "German": ("trg", output_)})
+# train_data, test_data = TabularDataset.splits(path="", train="val_en_de.json", test="test_en_de.json", format="json", fields={"English": ("src", input_), "German": ("trg", output_)})
+# train_data, val_data, test_data = Multi30k(language_pair=("en", "de"))
+# train_data, val_data, test_data = IWSLT2016(language_pair=("en", "de"))
+# train_data, val_data, test_data = IWSLT2017(language_pair=("en", "de"))
 
 input_.build_vocab(train_data, max_size=10_000, min_freq=2)
 output_.build_vocab(train_data, max_size=10_000, min_freq=2)
 
 # Model hyperparameters
 src_vocab_size = len(input_.vocab)
-print(src_vocab_size)
 trg_vocab_size = len(output_.vocab)
+
+print(src_vocab_size)
 print(trg_vocab_size)
-sys.exit()
+
 embedding_size = 4096
 num_heads = 8
 num_encoder_layers = 3
@@ -52,8 +62,11 @@ src_pad_idx = input_.vocab.stoi["<pad>"]
 writer = SummaryWriter("runs/loss_plot")
 step = 0 + start
 
-train_iterator, val_iterator, test_iterator = BucketIterator.splits(
-    (train_data, val_data, test_data), batch_size=batch_size, sort_within_batch=True, sort_key=lambda x: len(x.src), device=device
+# train_iterator, val_iterator, test_iterator = BucketIterator.splits(
+#     (train_data, val_data, test_data), batch_size=batch_size, sort_within_batch=True, sort_key=lambda x: len(x.src), device=device
+# )
+(train_iterator, test_iterator) = BucketIterator.splits(
+    (train_data, test_data), batch_size=batch_size, sort_within_batch=True, sort_key=lambda x: len(x.src), device=device
 )
 
 model = Transformer(embedding_size, src_vocab_size, trg_vocab_size, src_pad_idx, num_heads, num_encoder_layers, num_decoder_layers, forward_expansion, dropout, max_len, device).to(device)
@@ -82,7 +95,7 @@ if train_model:
             # Get input and targets and get to cuda
             inp_data = batch.src.to(device)
             target = batch.trg.to(device)
-
+            
             # Forward prop
             output = model(inp_data, target[:-1, :])
 
