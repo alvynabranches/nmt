@@ -25,9 +25,10 @@ def create_json_dataset(english_file: str, german_file: str, start: int=0, end: 
         }, 
         columns=['English', 'German']
     )
+    df.to_json("en_de.json", orient="records", lines=True)
     del english_txt, german_txt
 
-    train, test = train_test_split(df, test_size=0.1)
+    train, test = train_test_split(df, test_size=0.05)
     test, val = train_test_split(test, test_size=0.5)
     del df
     
