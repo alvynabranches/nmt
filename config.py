@@ -16,7 +16,7 @@ score_model = True
 num_epochs = 1
 start = 0
 learning_rate = 3e-4
-batch_size = 16
+batch_size = 4
 
 # File name for pth files.
 filename = "models/en_de_{}.pth"
