@@ -1,4 +1,4 @@
-import os, sys, spacy, torch, torch.nn as nn, torch.optim as optim, torch.cuda as cuda
+import os, pickle as pkl, sys, spacy, torch, torch.nn as nn, torch.optim as optim, torch.cuda as cuda
 from pprint import pprint
 from tqdm import tqdm
 from torchtext.legacy.data import Field, BucketIterator, TabularDataset
@@ -19,19 +19,21 @@ FIRST, LAST = 2012, 2012
 file_not_present = not (os.path.isfile("./train_en_de.json") and os.path.isfile("./val_en_de.json") and os.path.isfile("./test_en_de.json"))
 if create_json:
     create_json_dataset(
-        # ["data/en_de/train.en", "data/en_de/newstest2012.en", "data/en_de/newstest2013.en", "data/en_de/newstest2014.en", "data/en_de/newstest2015.en"], 
-        # ["data/en_de/train.de", "data/en_de/newstest2012.de", "data/en_de/newstest2013.de", "data/en_de/newstest2014.de", "data/en_de/newstest2015.de"]
-        [f"data/en_de/newstest{i}.en" for i in range(FIRST, LAST+1)], 
+        # ["data/en_de/train.en"] + [f"data/en_de/newstest{i}.en" for i in range(2012, 2015+1)],
+        # ["data/en_de/train.de"] + [f"data/en_de/newstest{i}.de" for i in range(2012, 2015+1)],
+        [f"data/en_de/newstest{i}.en" for i in range(FIRST, LAST+1)],
         [f"data/en_de/newstest{i}.de" for i in range(FIRST, LAST+1)]
     )
 
 spacy_input = spacy.load("en_core_web_sm")
-# spacy_input = spacy.load("en_core_web_trf")
 spacy_output = spacy.load("de_core_news_sm")
+# spacy_input = spacy.load("en_core_web_trf")
 # spacy_output = spacy.load("de_dep_news_trf")
 
 input_ = Field(tokenize=lambda text: [tok.text for tok in spacy_input.tokenizer(text)], lower=True, init_token="<sos>", eos_token="<eos>")
 output_ = Field(tokenize=lambda text: [tok.text for tok in spacy_output.tokenizer(text)], lower=True, init_token="<sos>", eos_token="<eos>")
+pkl.dump(input_, open("input.pkl", "wb"))
+pkl.dump(output_, open("output.pkl", "wb"))
 
 train_data, val_data, test_data = TabularDataset.splits(path="", train="train_en_de.json", validation="val_en_de.json", test="test_en_de.json", format="json", fields={"English": ("src", input_), "German": ("trg", output_)})
 # train_data, test_data = TabularDataset.splits(path="", train="val_en_de.json", test="test_en_de.json", format="json", fields={"English": ("src", input_), "German": ("trg", output_)})
