@@ -139,3 +139,6 @@ runs/
 
 # JSON Files
 *en_de.json
+
+# Pickle Files
+*.pkl
