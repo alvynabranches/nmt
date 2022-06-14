@@ -14,8 +14,8 @@ from utils.data import create_json_dataset
 
 cuda.empty_cache()
 # 2012-2015
-FIRST = 2012
-LAST = 2012
+FIRST, LAST = 2012, 2012
+
 file_not_present = not (os.path.isfile("./train_en_de.json") and os.path.isfile("./val_en_de.json") and os.path.isfile("./test_en_de.json"))
 if create_json:
     create_json_dataset(
